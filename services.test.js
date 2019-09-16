@@ -1,9 +1,8 @@
 import Enzyme from 'enzyme'
 import Adapter from 'enzyme-adapter-react-16'
-
-import ValidateField from './ValidateField'
-import * as configs from './config'
 import https from 'https'
+
+import * as configs from './config'
 
 function request(url) {
   return new Promise(resolve => {
