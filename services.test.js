@@ -1,6 +1,7 @@
 import Enzyme from 'enzyme'
 import Adapter from 'enzyme-adapter-react-16'
 
+import ValidateField from './ValidateField'
 import * as configs from './config'
 import https from 'https'
 
@@ -19,19 +20,15 @@ Enzyme.configure({ adapter: new Adapter() })
 const services = [
   { // Include an object per microservice, at the moment there is just users
     model: 'user',
-    service: "https://your-microservices-url/swagger/?format=openapi",
-    definition: "User"
+    name: 'Users',
+    endpoint: "https://your-microservices-url/swagger/?format=openapi",
   }
 ]
 
-const compareFields = async (group, localprop, remoteprop, version="v1") => {
-  const { model, service, definition } = group
-  const r = await request(service)
-  const swagger = JSON.parse(r)
-
-  if (swagger.definitions[definition] && swagger.info.version === version) {
-    const { properties } = swagger.definitions[definition]
-    const { fields } = configs[model]
+const compareFields = async (localprop, remoteprop, service, swagger) => {
+  if (swagger.definitions[service.name]) {
+    const { properties } = swagger.definitions[service.name]
+    const { fields } = configs[service.model]
     fields.forEach(field => {
       if (properties[field.name]) {
         expect(field[localprop]).toEqual(properties[field.name][remoteprop])
@@ -40,24 +37,47 @@ const compareFields = async (group, localprop, remoteprop, version="v1") => {
   }
 }
 
+const isRequired = async (service, swagger) => {
+  if (swagger[service.name].required) {
+    const { fields } = configs[service.model]
+    fields.forEach(field => {
+      if (field.required) {
+        expect(swagger[service.name].required.includes(field.required)).toBe(true)
+      }
+    })
+    swagger[service.name].required.forEach(field => {
+      expect(fields[field.name].required).toBe(true)
+    })
+  }
+}
+
+const isPresent = async (service, swagger) => {
+  if (swagger.definitions[definition]) {
+    configs[service.model].forEach(field => {
+      expect(swagger[service.name].properties.includes(field.name)).toBe(true)
+    })
+  }
+}
+
 describe('Config', () => {
   beforeAll(() => {
     jest.setTimeout(30000)
   })
-  it('passes validation', () => {
-    for (const config in configs) {
-      if (configs[config]) {
-        const { fields } = configs[config]
-        if (fields) {
-          fields.forEach(field => new FieldValidator({ ...field, config: configs[config] }))
-        }
-      }
-    }
-  })
 
-  services.forEach(group => {
-    it(`All ${group.model.toUpperCase()} fields with maxlengths have their maxlen defined`, async () => {
-      await compareFields(group, 'maxlen', 'maxLength')
+  services.forEach(service => {
+    const r = await request(service.endpoint)
+    const swagger = JSON.parse(r)
+    it(`fields types are equal`, async () => {
+      await compareFields('type', 'type', service, swagger)
+    })
+    it(`fields with maxlengths have their maxlen defined`, async () => {
+      await compareFields('maxlen', 'maxLength', service, swagger)
+    })
+    it(`fields are actually required`, async () => {
+      await isRequired(service, swagger)
+    })
+    it(`fields exist in services`, async () => {
+      await isPresent(service, swagger)
     })
   })
 
