@@ -1,0 +1,44 @@
+ {
+  "user": [
+    {
+    "name": "title",
+    "label": "Title",
+    "input": "Select",
+    "type": "string",
+    "required": true,
+    "options": [
+      "Mr",
+      "Mrs",
+      "Miss",
+      "Dr",
+      "Prof"
+    ]
+    } , {
+    "name": "first_name",
+    "label": "First Name",
+    "input": "Text",
+    "type": "string",
+    "required": true,
+    "maxlen": 255
+    } , {
+    "name": "last_name",
+    "label": "Surname",
+    "input": "Text",
+    "type": "string",
+    "required": true,
+    "maxlen": 255
+    } , {
+    "name": "email",
+    "label": "Email",
+    "input": "Text",
+    "type": "string",
+    "required": true,
+    "maxlen": 255
+    } , {
+    "name": "age",
+    "label": "Age",
+    "input": "Tel",
+    "type": "integer"
+    }
+  ]
+}
